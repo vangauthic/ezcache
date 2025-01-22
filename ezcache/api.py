@@ -12,13 +12,16 @@ class EZCache():
         self.timeout = timeout
         self.cache = OrderedDict() if cache_type == 'dict' else []
         self.timestamps = {} if cache_type == 'dict' else []
-
+        self.index_map = {}
+        
     def _is_expired(self, key):
         if self.timeout is None:
             return False
         return (time.time() - self.timestamps[key]) > self.timeout
 
     def _remove_expired(self):
+        if self.timeout is None:
+            return False
         keys_to_remove = []
         for key in self.cache if self.cache_type == 'dict' else range(len(self.cache)):
             if self._is_expired(key):
@@ -57,10 +60,10 @@ class EZCache():
                 self.cache.move_to_end(key)
                 return self.cache[key]
         else:
-            if key in self.cache:
-                index = self.cache.index(key)
+            if key in self.index_map:  # O(1) lookup
+                index = self.index_map[key]
                 if not self._is_expired(index):
-                    return key
+                    return self.cache.values()[key]
         return None
 
     def remove(self, key):
@@ -69,10 +72,15 @@ class EZCache():
                 del self.cache[key]
                 del self.timestamps[key]
         else:
-            if key in self.cache:
-                index = self.cache.index(key)
+            if key in self.index_map:  # O(1) lookup
+                index = self.index_map[key]
                 self.cache.pop(index)
                 self.timestamps.pop(index)
+                del self.index_map[key]
+                # Update indices for remaining elements
+                for k, idx in self.index_map.items():
+                    if idx > index:
+                        self.index_map[k] = idx - 1
 
     def clear(self):
         self.cache = OrderedDict() if self.cache_type == 'dict' else []
