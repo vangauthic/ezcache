@@ -1,61 +1,45 @@
-# Plane-py
+# EZCache
 
-An async Python client for the [Plane](https://plane.so) API. This package provides a clean and intuitive interface to interact with Plane's project management features.
+EZCache is a Python library to easily create and manage list/dict caches with support for expiration and maximum item limits.
 
 ## Installation
 
 ```bash
-pip install plane-py
+pip install ezcache
 ```
 
 ## Quick Start
 
 ```python
 import asyncio
-from plane_py import PlaneClient
+from ezcache import EZCache
 
 async def main():
-    # Initialize client
-    client = PlaneClient(
-        api_token="your_api_token",
-        workspace_slug="your_workspace_slug"
-    )
-    
-    # Get all projects
-    projects = await client.get_projects()
-    for project in projects:
-        print(f"Project: {project.name}")
-        
-        # Get all issues for project
-        issues = await client.get_issues(project.id)
-        for issue in issues:
-            print(f"- Issue: {issue.name}")
+    # Initialize dict cache
+    dict_cache = EZCache(cache_type='dict', max_items=3, timeout=5)
+    dict_cache.set('a', value=1)
+    dict_cache.set('b', value=2)
+    print(dict_cache.get('a'))  # Output: 1
+
+    # Initialize list cache
+    list_cache = EZCache(cache_type='list', max_items=3, timeout=5)
+    list_cache.set(1)
+    list_cache.set(2)
+    print(list_cache.get(1))  # Output: 1
+
+    # View all values in caches
+    print(dict_cache.view_all())  # Output: {'a': 1, 'b': 2}
+    print(list_cache.view_all())  # Output: [1, 2]
 
 asyncio.run(main())
 ```
 
 ## Features
-
-- Full async/await support
-- Type hints for better IDE integration
-- Comprehensive error handling
-- Support for all major Plane API endpoints:
-  - Projects
-  - States
-  - Labels
-  - Issues
-  - Issue Links
-  - Issue Activities
-  - Issue Comments
-  - Modules
-  - Module Issues
-  - Cycles
-  - Cycle Issues
-  - Intake Issues
-  - Issue Types
-  - Issue Properties
-  - Property Options
-  - Property Values
+- Support for both dict and list caches
+- Expiration of cache items based on timeout
+- Maximum item limit for caches
+- Methods to set, get, remove, and clear cache items
+- Method to view all values in the cache
 
 ## License
 

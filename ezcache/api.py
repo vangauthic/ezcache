@@ -26,22 +26,28 @@ class EZCache():
         for key in keys_to_remove:
             self.remove(key)
 
-    def set(self, key, value):
+    def set(self, key, **kwargs):
         self._remove_expired()
+        self.value = kwargs.get('value', None)
         
         if self.cache_type == 'dict':
             if key in self.cache:
                 self.cache.move_to_end(key)
-            self.cache[key] = value
+            self.cache[key] = self.value
             self.timestamps[key] = time.time()
         else:
             if key in self.cache:
-                self.cache.remove(key)
-            self.cache.append((key, value))
+                index = self.cache.index(key)
+                self.cache.pop(index)
+                self.timestamps.pop(index)
+            self.cache.append(key)
             self.timestamps.append(time.time())
 
         if self.max_items is not None and len(self.cache) > self.max_items:
-            self.remove(self.cache.popitem(last=False)[0] if self.cache_type == 'dict' else self.cache.pop(0)[0])
+            if self.cache_type == 'dict':
+                self.remove(self.cache.popitem(last=False)[0])
+            else:
+                self.remove(self.cache[0])
 
     def get(self, key):
         self._remove_expired()
@@ -51,10 +57,10 @@ class EZCache():
                 self.cache.move_to_end(key)
                 return self.cache[key]
         else:
-            for i, (k, v) in enumerate(self.cache):
-                if k == key and not self._is_expired(i):
-                    self.cache.append(self.cache.pop(i))
-                    return v
+            if key in self.cache:
+                index = self.cache.index(key)
+                if not self._is_expired(index):
+                    return key
         return None
 
     def remove(self, key):
@@ -63,12 +69,18 @@ class EZCache():
                 del self.cache[key]
                 del self.timestamps[key]
         else:
-            for i, (k, _) in enumerate(self.cache):
-                if k == key:
-                    self.cache.pop(i)
-                    self.timestamps.pop(i)
-                    break
+            if key in self.cache:
+                index = self.cache.index(key)
+                self.cache.pop(index)
+                self.timestamps.pop(index)
 
     def clear(self):
         self.cache = OrderedDict() if self.cache_type == 'dict' else []
         self.timestamps = {} if self.cache_type == 'dict' else []
+
+    def view_all(self):
+        self._remove_expired()
+        if self.cache_type == 'dict':
+            return dict(self.cache.items())
+        else:
+            return list(self.cache)
