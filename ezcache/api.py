@@ -74,19 +74,19 @@ class EZCache():
             self.cache.append(value)
             self.timestamps.append(time.time())
 
-        def get(self, key):
-            self._remove_expired()
-            
-            if self.cache_type == 'dict':
-                if key in self.cache and not self._is_expired(key):
-                    self.cache.move_to_end(key)
-                    return self.cache[key]
-            else:
-                if key in self.index_map:  # O(1) lookup
-                    index = self.index_map[key]
-                    if not self._is_expired(index):
-                        return self.cache.values()[key]
-            return None
+    def get(self, key):
+        self._remove_expired()
+        
+        if self.cache_type == 'dict':
+            if key in self.cache and not self._is_expired(key):
+                self.cache.move_to_end(key)
+                return self.cache[key]
+        else:
+            if key in self.index_map:  # O(1) lookup
+                index = self.index_map[key]
+                if not self._is_expired(index):
+                    return self.cache.values()[key]
+        return None
 
     def remove(self, key):
         if self.cache_type == 'dict':
